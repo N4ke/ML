@@ -4,15 +4,22 @@ import numpy as np
 class LinearRegression:
     
     def __init__(self, x, y, learning_rate: float) -> None:
-        self.w = 0
-        self.b = 0
-        self.alpha = learning_rate
         self.x_cor = np.array(x)
         self.y_cor = np.array(y)
 
+        if self.x_cor.ndim == 1:
+            self.x_cor = self.x_cor.reshape(-1, 1)
+        
+        self.x_cor = (self.x_cor - np.mean(self.x_cor, axis=0)) / np.std(self.x_cor, axis=0)
+        self.y_cor = (self.y_cor - np.mean(self.y_cor, axis=0)) / np.std(self.y_cor, axis=0)
+
+        self.w = np.zeros(self.x_cor.shape[1])
+        self.b = 0
+        self.alpha = learning_rate
+
 
     def lin_func(self, x) -> float:
-        return self.w * x + self.b
+        return np.dot(x, self.w) + self.b
 
 
     def MSE(self) -> float:
@@ -21,15 +28,10 @@ class LinearRegression:
 
 
     def gradient_descent(self) -> None:
-        temp_w = self.w
-        temp_b = self.b
         error = (self.lin_func(self.x_cor) - self.y_cor)
         
-        temp_w = self.w - self.alpha * (1 / len(self.x_cor)) * np.dot(error, self.x_cor)
-        temp_b = self.b - self.alpha * (1 / len(self.x_cor)) * np.sum(error)
-        
-        self.w = temp_w
-        self.b = temp_b
+        self.w -= self.alpha * (1 / len(self.x_cor)) * np.dot(self.x_cor.T, error)
+        self.b -= self.alpha * (1 / len(self.x_cor)) * np.sum(error)
 
 
     def fit(self, accuracy: float, max_iters: int = 1000000) -> None:
