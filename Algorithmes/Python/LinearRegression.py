@@ -34,10 +34,10 @@ class LinearRegression:
         self.b -= self.alpha * (1 / len(self.x_cor)) * np.sum(error)
 
 
-    def fit(self, accuracy: float, max_iters: int = 1000000) -> None:
+    def fit(self, accuracy: float, max_iters: int = 1000000) -> np.array:
         iters = 0
         while self.MSE() > accuracy and iters < max_iters:
             self.gradient_descent()
             iters += 1
 
-        print(self.w, self.b)
+        return self.w, self.b
