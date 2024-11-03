@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class LinearRegression:
@@ -9,8 +10,10 @@ class LinearRegression:
 
         if self.x_cor.ndim == 1:
             self.x_cor = self.x_cor.reshape(-1, 1)
-        
-        self.x_cor = (self.x_cor - np.mean(self.x_cor, axis=0)) / np.std(self.x_cor, axis=0)
+
+        self.x_mean = np.mean(self.x_cor, axis=0)
+        self.x_std = np.std(self.x_cor, axis=0)
+        self.x_cor = (self.x_cor - self.x_mean) / self.x_std
 
         self.w = np.zeros(self.x_cor.shape[1])
         self.b = 0
@@ -33,8 +36,14 @@ class LinearRegression:
         error = (self.lin_func(self.x_cor) - self.y_cor)
         reg = (self.reg_lambda / len(self.x_cor)) * self.w
 
-        self.w -= self.alpha * ((1 / self.x_cor.shape[1]) * np.dot(self.x_cor.T, error) - reg)
-        self.b -= self.alpha * (1 / self.x_cor.shape[1]) * np.sum(error)
+        self.w -= self.alpha * ((1 / self.x_cor.shape[0]) * np.dot(self.x_cor.T, error) + reg)
+        self.b -= self.alpha * (1 / self.x_cor.shape[0]) * np.sum(error)
+
+
+    def denormalize_coefficients(self):
+        temp_b = self.b - np.sum(self.w * self.x_mean / self.x_std)
+        temp_w = self.w / self.x_std
+        return temp_w, temp_b
 
 
     def fit(self, accuracy: float, max_iters: int = 1000000) -> None:
@@ -42,13 +51,15 @@ class LinearRegression:
         while self.MSE() > accuracy and iters < max_iters:
             self.gradient_descent()
             if iters % 100000 == 0:
-                print(self.w, self.b)
+                temp_w, temp_b = self.denormalize_coefficients()
+                print(f"w: {temp_w}, b: {temp_b}")
             iters += 1
+
+        self.w, self.b = self.denormalize_coefficients()
 
 
     def predict(self, x):
         x = np.array(x)
-        x = (x - np.mean(x, axis=0)) / np.std(x, axis=0)
         if x.ndim == 1:
             x = x.reshape(-1, 1)
         return self.lin_func(x)
